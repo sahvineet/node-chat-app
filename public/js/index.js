@@ -8,19 +8,32 @@ socket.on('disconnect', function () {
 })
 
 socket.on('newMessage', function (message) {
-    var formatedTime=moment(message.createdAt).format('h:mm a')
-    var li = jQuery('<li></li>');
-    li.text(`${message.from}: ${formatedTime} ${message.text}`);
-    jQuery('#messages').append(li);
+    var formatedTime = moment(message.createdAt).format('h:mm a')
+    var template = jQuery('#message-template').html();
+    var html = Mustache.render(template, {
+        from: message.from,
+        text: message.text,
+        createdAt: formatedTime
+    });
+    jQuery('#messages').append(html);
 })
 socket.on('newLocationMessage', function (message) {
-    var formatedTime=moment(message.createdAt).format('h:mm a')
-    var li = jQuery('<li></li>');
-    var a = jQuery(`<a target='_blank'>My Current Location</a>`);
-    li.text(`${message.from}: ${formatedTime} `);
-    a.attr('href', message.url);
-    li.append(a);
-    jQuery('#messages').append(li);
+    var formatedTime = moment(message.createdAt).format('h:mm a')
+    var template = jQuery('#location-message-template').html();
+    var html = Mustache.render(template, {
+        from: message.from,
+        url: message.url,
+        createdAt: formatedTime
+    });
+    jQuery('#messages').append(html)
+    
+    // var formatedTime = moment(message.createdAt).format('h:mm a')
+    // var li = jQuery('<li></li>');
+    // var a = jQuery(`<a target='_blank'>My Current Location</a>`);
+    // li.text(`${message.from}: ${formatedTime} `);
+    // a.attr('href', message.url);
+    // li.append(a);
+    // jQuery('#messages').append(li);
 
 })
 
@@ -42,7 +55,7 @@ jQuery(document).ready(function () {
         if (!navigator.geolocation)
             return alert('Geo location in not supported by your browser');
 
-            locationDom.attr('disabled', 'disabled').text('Sending location...');
+        locationDom.attr('disabled', 'disabled').text('Sending location...');
 
         navigator.geolocation.getCurrentPosition(function (postions) {
             locationDom.removeAttr('disabled').text('Send location');
