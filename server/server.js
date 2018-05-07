@@ -3,7 +3,7 @@ const http = require('http');
 const publicPath = path.join(__dirname, '../public');
 const express = require('express');
 var socketIO = require('socket.io');
-
+const { isRealString } = require('./utils/validation')
 const { generateMessage, generateLocationMessage } = require('./utils/message')
 
 var app = express();
@@ -18,9 +18,18 @@ var io = socketIO(server);
 io.on('connection', (socket) => {
     console.log('New user connected.')
 
-    socket.emit('newMessage', generateMessage('Admin', 'Welcome to AZ chat'));
-    socket.broadcast.emit('newMessage', generateMessage('Admin', 'New User Joined!'))
+    socket.on('join', (params, callback) => {
+        if (!isRealString(params.name) || !isRealString(params.room)) {
+            callback('Name and Room name cannot be blank');
+        }
 
+        socket.join(params.room);
+        socket.emit('newMessage', generateMessage('Admin', 'Welcome to AZ chat'));
+        socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has Joined!`))
+    
+
+        callback(null);
+    })
     socket.on('createMessage', (message, callback) => {
         console.log('createMessage', message);
         io.emit('newMessage', generateMessage(message.from, message.text));
